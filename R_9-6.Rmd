@@ -1,0 +1,241 @@
+---
+title: "QM_9/6"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+Get numbers from a normal distribution using 'rnorm()'
+Mean automatically 0 and sd 1
+Pseudo random number generator is tied to the time
+```{r}
+y <- rnorm(20)
+y
+```
+
+To get the same number each time - use "c"
+
+Visualize numbers using a histogram
+```{r}
+hist(y)
+```
+
+One sample t test
+```{r}
+t.test(y)
+```
+
+Get a new set of pseudorandom numbers
+```{r}
+z <- rnorm(20)
+```
+
+```{r}
+t.test(z)
+```
+
+Most likely if we did this 20 times we might get a significant p value (even though the true mean of the pseudorandom numbers IS zero)
+
+These are frequentist p values - making an assumption about the true value of the mean. 
+So assuming the true mean is zero, we then compare our data set to what we are likely to observe given our null hyp (mean =0)
+
+Now to do some statistical tests I will load in Lophophore Data
+```{r}
+setwd("~/FSU/Classes/QM1")
+loph <- read.csv("lophophore ready for R.csv")
+```
+
+Try plotting the data with the r presents
+```{r}
+plot(loph)
+```
+
+```{r}
+head(loph)
+```
+Now I want to reformat the data for plotting. There's R code on Canvas with exactly how this is plotted. Probably not worth re-doing here but instead to look at that file. 
+
+```{r}
+hist(loph$lophophore.um3)
+```
+Notice this is not clearly normally distributed. 
+Tests for normal distribution you can really believe a "yes" but if it says "no" it could still be...
+
+We want to know if the linear model is normally distributed after fitting the regression line
+
+```{r}
+lm1 <- lm(lophophore.um3~ duration.hrs, data=loph)
+```
+
+You don't need to specify the B0 for this model. You also don't have to specify error distribution 
+This is the line that is added to this figure (see other r code). 
+
+To add an lm model to the plot you can use 'predict()' but you can also use 'abline(m1)'
+You still need the plot here
+```{r}
+#abline(lm1) This won't work unless you have already made the plot
+```
+
+Use 'summary()' to look at this linear model
+```{r}
+summary(lm1)
+```
+
+The duration.hrs is the slope (makes sense). Tells us whether the intercept and slope are signficantly different from zero (yes they are).
+
+R2 tells us that 41% of the variance is explained by the regression line
+Adj R2 is always equal to or smaller than R2. 
+For whole model the p value is the same for the p value for B1 (duration.hrs)
+
+Use 'Plot()' to look at model assumptions. These are diagnostic plots
+```{r}
+plot(lm1)
+```
+
+Residuals vs fitted (expected value along regression line) plot. Residuals should be centered around zero. Some negative some positive. You want to see your resids centered around zero and not a strong pattern in the red line. You don't want curvature in your data. 
+- Note that R labels your three largest residuals
+
+Q-Q Norm plot
+-Standardized residuals (resids divided by sd) by theoretical dist of residuals. If these two are identical they will fall along this 1:1 line. 
+-Here we can see most points fall along 1:1 line. This is a good fit of the residuals to the assumption of normality. 
+-You just want to watch out for systematic deviations from normality. E.g., residual clumps far from the line. You can figure out a good transformation based on what your residuals look like. 
+
+Scale-Location
+Fitted values and instead of raw residuals it is the square root of the standardized residuals. Should be centered around 1. Should be a flat line. 
+
+Residuals vs. Leverage (Cook's distances)
+X axis is leverage- a measure of how far the data is from the mean x
+-Points that are far from the mean have a lot of influence on the slope of the regression line
+-Plotting leverage of every data point (distance from mean x) and size of the residual - tells us how important a single data point is for estimating the value of B1
+-A point far from the mean X and a huge residual will have very large leverage. If they are near the mean x they won't have a large influence. 
+-R will read out the largest leverage data points
+
+### Lecture 9/8 work
+
+First set working directory to where the data file lives 
+```{r}
+setwd("~/FSU/Classes/QM1")
+```
+
+Load mollies data (as csv file) and name it mollies
+```{r}
+mollies <- read.csv("Mollies.csv")
+```
+
+
+
+```{r}
+plot(RAYNO~SL, data=mollies)
+head(mollies)
+```
+#categorical data so can't have continous distribution of residuals
+```{r}
+m1 <- lm(RAYNO~SL, data=mollies)
+plot(m1)
+```
+Residuals fall into diagonal bands because the data has discrete values (4)
+QQ -Norm can again see that data is not continous (it is discrete)
+Standardized residuals
+Leverage plot - none of the points are extreme outliers 
+None of the points have that much leverage
+
+
+```{r}
+summary(m1)
+```
+For each increase in ray number by 1 you get 0.02 more mm
+Slope not signifiantly different from 0. I fail to reject my null hypothesis that ray number is a function of SL. 
+3% of variance is explained by model. 
+
+```{r}
+plot(RAYNO~POP, data=mollies, xlab="Population",ylab="Number of Rays")
+```
+
+We don't want all that white space though
+```{r}
+str(mollies)
+```
+
+Pop is an Int = whole numbers
+
+To spread out a cloud of points use "jitter"
+
+```{r}
+plot(jitter(RAYNO)~POP, data=mollies, xlab="Population",ylab="Number of Rays")
+```
+
+Still not great, a lot of overlap. 
+
+```{r}
+plot(jitter(RAYNO)~jitter(POP), data=mollies, xlab="Population",ylab="Number of Rays")
+```
+
+The danger of doing this is that it now looks like there are differences in the data (e.g., 14.1, 14.2)
+
+Now let's change population from an integer to a factor (categorical variable)
+
+```{r}
+mollies$POP <- as.factor(mollies$POP)
+```
+
+Check it worked
+
+```{r}
+str(mollies)
+```
+
+```{r}
+plot(RAYNO~POP, data=mollies,ylab="Number of Rays",xlab="Population")
+```
+
+The thick bar is at the median, whiskers contain some percent of the data. Dots show outliers
+
+Create another model
+```{r}
+m2 = lm(mollies$RAYNO ~ mollies$POP)
+```
+
+Next look at the model summary
+
+```{r}
+summary(m2)
+```
+
+Testing a null that all three populations have the same mean. The linear model summary does not show a p value that corresponds to that null hypothesis. 
+
+To actually test this hypothesis I need an ANOVA model
+
+```{r}
+anova(m2)
+```
+
+Response was ray number, df of 2 (because 3 populations, df = n-1), sum of squares (residuals from group mean), mean square, F value (ratio of mean squares), p value (small p)
+
+So I'm going to reject the null hypothesis
+
+Look how the p values are the same between the linear model and the ANOVA. The ANOVA p value is actually testing the null that all three populations have the same mean. 
+
+
+
